@@ -6,8 +6,10 @@ class QuizPage extends StatefulWidget {
 
 class _QuizPageState extends State<QuizPage> {
   int currentQuestionIndex = 0;
+  int score=0;
   String? selectedOption; // Tracks which option user selected
-  bool showAnswer = false; // Flag to show correct/wrong answers
+  bool showAnswer = false;
+  bool showHome=false; // Flag to show correct/wrong answers
 
   final List<Map<String, Object>> questions = [
     {
@@ -28,10 +30,13 @@ class _QuizPageState extends State<QuizPage> {
     // Add 7 more questions here
   ];
 
-  void handleOptionSelect(String option) {
+  void handleOptionSelect(String option, String correctAnswer) {
     if (!showAnswer) {
       setState(() {
         selectedOption = option;
+        if(selectedOption==correctAnswer){
+          score+=10;
+        }
         showAnswer = true; // Reveal correct and selected options
       });
     }
@@ -39,15 +44,32 @@ class _QuizPageState extends State<QuizPage> {
 
   void goToNextQuestion() {
     setState(() {
-      if (currentQuestionIndex < questions.length - 1) {
+      if (currentQuestionIndex < questions.length - 2) {
         currentQuestionIndex++;
         selectedOption = null; // Reset selection
         showAnswer = false; // Hide answers
-      } else {
+      } 
+      else if(currentQuestionIndex==questions.length-2) {
+        currentQuestionIndex++;
+        selectedOption=null;
+        showAnswer=false;
+        showHome=true;
+
+
+
+      }
+      else {
         // Quiz is finished, handle end state
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Quiz Finished! Well done.")),
+        // ScaffoldMessenger.of(context).showSnackBar(
+        //   SnackBar(content: Text("Quiz Finished! You have scored $score marks")),
+        // );
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => ScoreScreen(score: score)),
         );
+        
+
+
       }
     });
   }
@@ -57,6 +79,7 @@ class _QuizPageState extends State<QuizPage> {
     final question = questions[currentQuestionIndex]['question'] as String;
     final options = questions[currentQuestionIndex]['options'] as List<String>;
     final correctAnswer = questions[currentQuestionIndex]['correct'] as String;
+    
 
     return Scaffold(
       appBar: AppBar(
@@ -82,7 +105,7 @@ class _QuizPageState extends State<QuizPage> {
               (option) => Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8.0),
                 child: ElevatedButton(
-                  onPressed: () => handleOptionSelect(option),
+                  onPressed: () => handleOptionSelect(option, correctAnswer),
                   style: ElevatedButton.styleFrom(
                     foregroundColor: Colors.white,
                     backgroundColor: showAnswer
@@ -106,7 +129,7 @@ class _QuizPageState extends State<QuizPage> {
                 ),
               ),
             ),
-            if (showAnswer)
+            if (showAnswer&& !showHome)
               Center(
                 child: ElevatedButton(
                   onPressed: goToNextQuestion,
@@ -118,9 +141,70 @@ class _QuizPageState extends State<QuizPage> {
                   ),
                 ),
               ),
+            if (showAnswer&& showHome)
+              Center(
+                child: ElevatedButton(
+                  onPressed: goToNextQuestion,
+                  child: Text("Submit"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color.fromARGB(255, 24, 10, 71),
+                    foregroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+                  ),
+                ),
+                ),
+
+
+
+            
           ],
         ),
       ),
     );
   }
+}
+
+class ScoreScreen extends StatelessWidget{
+  final int score;
+  ScoreScreen({required this.score});
+  @override
+  Widget build(BuildContext context){
+    return Scaffold(
+      appBar: AppBar(
+        iconTheme: IconThemeData(color: Colors.white),
+      backgroundColor: const Color.fromARGB(255, 24, 10, 71),
+      title: 
+      Text(
+        "Score Card",
+        style: TextStyle(color: Colors.white),
+      ),
+      centerTitle: true,
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+          SizedBox(
+            width:500,
+            height: 100,
+            child: Center(
+              child: Text(
+               'You have scored $score marks out of 30 marks' ,
+               textAlign: TextAlign.center,
+               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+               
+              ),
+
+            )
+          ),
+
+        ]
+        
+        )
+        )
+
+    );
+  }
+
+
 }
